@@ -68,9 +68,7 @@ pipeline {
               // Actions to be taken on failure
               emailext attachLog: true, body: 'messages from the build ', replyTo: 'princewillopah.dev@gmail.com', subject: 'FAILED -- Test Alert for emal notification from jebkins build', to: 'princewillopah.dev@gmail.com'
           }
-          always {
-              // Actions to be taken always, regardless of success or failure
-          }
+
     }
 
 
