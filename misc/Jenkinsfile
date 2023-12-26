@@ -16,4 +16,76 @@ node {
        def app = docker.build("princewillopah/docker-nodejs-demo:${commit_id}", '.').push()
      }
    }
+ 
 }
+
+pipeline {
+    agent any
+    
+    environment {
+        commit_id = ''
+    }
+
+    stages {
+        stage('Preparation') {
+            steps {
+                checkout scm
+                script {
+                    commit_id = readFile('.git/commit-id').trim()
+                }
+            }
+        }
+
+        stage('test') {
+            agent {
+                label 'nodejs'
+            }
+            steps {
+                script {
+                    sh 'npm install --only=dev'
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('docker build/push') {
+            steps {
+                script {
+                    docker.withRegistry('https://index.docker.io/v2/', 'credential_for_dockerhub') {
+                        def app = docker.build("princewillopah/docker-nodejs-demo:${commit_id}", '.').push()
+                    }
+                }
+            }
+        }
+    }//End of stages
+
+        post {
+          success {
+              // Actions to be taken on success
+              emailext attachLog: true, body: 'messages from the build ', replyTo: 'princewillopah.dev@gmail.com', subject: 'SUCCESS -- Test Alert for emal notification from jebkins build', to: 'princewillopah.dev@gmail.com'
+          }
+          failure {
+              // Actions to be taken on failure
+              emailext attachLog: true, body: 'messages from the build ', replyTo: 'princewillopah.dev@gmail.com', subject: 'FAILED -- Test Alert for emal notification from jebkins build', to: 'princewillopah.dev@gmail.com'
+          }
+          always {
+              // Actions to be taken always, regardless of success or failure
+          }
+    }
+
+
+}
+
+
+
+    // post {
+    //     success {
+    //         // Actions to be taken on success
+    //     }
+    //     failure {
+    //         // Actions to be taken on failure
+    //     }
+    //     always {
+    //         // Actions to be taken always, regardless of success or failure
+    //     }
+    // }
